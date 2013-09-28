@@ -3,7 +3,6 @@
 SNAPSHOT_FILE="$HOME/.archive-system-tar-incremental-snapshot"
 SNAPSHOT_TEMP_FILE="${SNAPSHOT_FILE}-new"
 LOCK_FILE="$HOME/.archive-system-lock"
-LOCK_FD=42 # magic number, value doesn't matter
 VAULT="archive-system"
 
 ARCHIVE_PATHS=(
@@ -30,8 +29,8 @@ for path in "${ARCHIVE_PATHS[@]}"; do
 done
 
 echo "Acquiring file lock on $LOCK_FILE"
-exec $LOCK_FD>> "$LOCK_FILE"
-flock -s "$LOCK_FD"
+exec 42>> "$LOCK_FILE"
+flock -s 42
 echo "Lock acquired"
 
 if [ -e "$SNAPSHOT_TEMP_FILE" ]; then

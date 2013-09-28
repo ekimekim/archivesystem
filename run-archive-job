@@ -38,8 +38,12 @@ if [ -e "$SNAPSHOT_TEMP_FILE" ]; then
 	[ -f "$SNAPSHOT_TEMP_FILE" ] || die 1 "Existing snapshot temp file is not a regular file"
 fi
 
-echo "Creating temporary snapshot file"
-cp "$SNAPSHOT_FILE" "$SNAPSHOT_TEMP_FILE" || die 1 "Failed to create snapshot temp file"
+if [ -n "$FIRSTRUN" ]; then
+	echo "FIRST RUN: Skipping copy of snapshot file"
+else
+	echo "Creating temporary snapshot file"
+	cp "$SNAPSHOT_FILE" "$SNAPSHOT_TEMP_FILE" || die 1 "Failed to create snapshot temp file"
+fi
 
 ARCHIVE_NAME="${HOSTNAME}-${START_TIME}.tar.gz"
 echo "Performing upload of archive $ARCHIVE_NAME"

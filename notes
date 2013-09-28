@@ -1,0 +1,31 @@
+Archive system works thus:
+A regular job tars all relevant files. It uses tar -g
+to store some bookkeeping information, so that each tarball only contains changes from previous run.
+It then uploads the latest tarball to AWS Glacier using glacier-cli
+All tarballs are gzipped.
+
+In detail, provisions for atomicity:
+	1. Lock file is locked.
+	2. Snapshot file is copied, and the copy passed to tar.
+	   Copy is moved to original location (ie. atomic replacement) only once
+	   snapshot is fully uploaded.
+	3. Tarballs are uploaded with timestamp, which is used to determine order.
+	   It is assumed that partial uploads fail cleanly (ie. leave no resulting archive).
+	4. Copy is moved.
+	5. Lock file is unlocked.
+
+Failure modes:
+	Disk loss:
+		Restore all tarballs, and extract in order to get full state as of most recent backup.
+	Corruption:
+		Restore all tarballs, extract in order. Perform a bisect to determine last good backup.
+		Get full state as of last good backup.
+	Interrupted run:
+		If run was interrupted before upload completed (3):
+			No effect apart from junk file (snapshot copy), deleted on next run.
+		If run was interrupted between steps 3 and 4:
+			Next run contains same changes as interrupted run. On extract, both are applied
+			(second has no effect). Apart from a very small increase in data size (and therefore cost),
+			no problems.
+		Otherwise:
+			Indistinguishable from successful run

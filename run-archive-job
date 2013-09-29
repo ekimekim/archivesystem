@@ -34,7 +34,7 @@ done
 
 echo "Acquiring file lock on $LOCK_FILE"
 exec 42>> "$LOCK_FILE"
-flock -nx 42 || die "Failed to get file lock - already running?"
+flock -nx 42 || die 2 "Failed to get file lock - already running?"
 echo "Lock acquired"
 
 if [ -e "$SNAPSHOT_TEMP_FILE" ]; then

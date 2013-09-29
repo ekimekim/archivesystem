@@ -13,6 +13,10 @@ START_TIME="`date +%s`"
 
 [ -n "$HOSTNAME" ] || HOSTNAME="`hostname`"
 
+if ! which glacier >/dev/null 2>&1; then
+	PATH="${PATH}:$HOME/bin"
+fi
+
 die() {
 	code="$1"
 	shift

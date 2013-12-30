@@ -7,6 +7,8 @@ VAULT="archive-system"
 
 ARCHIVE_PATHS=(
 	"$HOME/src"
+	"$HOME/bin"
+	"$HOME/documents/resume"
 )
 
 START_TIME="`date +%s`"

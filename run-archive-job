@@ -58,7 +58,9 @@ else
 	cp "$SNAPSHOT_FILE" "$SNAPSHOT_TEMP_FILE" || die 1 "Failed to create snapshot temp file"
 fi
 
-ARCHIVE_NAME="${HOSTNAME}-${START_TIME}.tar.gz"
+NAME_EXTRA=
+[ -n "$FIRSTRUN" ] && NAME_EXTRA="-base"
+ARCHIVE_NAME="${HOSTNAME}-${START_TIME}${NAME_EXTRA}.tar.gz"
 echo "Performing upload of archive $ARCHIVE_NAME"
 tar czg "$SNAPSHOT_TEMP_FILE" "${ARCHIVE_PATHS[@]}" | glacier archive upload "$VAULT" --name="$ARCHIVE_NAME" - ||
 	die 1 "Upload failed."

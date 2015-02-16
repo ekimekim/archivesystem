@@ -15,7 +15,7 @@ START_TIME="`date +%s`"
 
 [ -n "$HOSTNAME" ] || HOSTNAME="`hostname`"
 
-if ! which glacier >/dev/null 2>&1; then
+if ! which glacier-cli >/dev/null 2>&1; then
 	PATH="${PATH}:$HOME/bin"
 fi
 
@@ -62,7 +62,7 @@ NAME_EXTRA=
 [ -n "$FIRSTRUN" ] && NAME_EXTRA="-base"
 ARCHIVE_NAME="${HOSTNAME}-${START_TIME}${NAME_EXTRA}.tar.gz"
 echo "Performing upload of archive $ARCHIVE_NAME"
-tar czg "$SNAPSHOT_TEMP_FILE" "${ARCHIVE_PATHS[@]}" | glacier archive upload "$VAULT" --name="$ARCHIVE_NAME" - ||
+tar czg "$SNAPSHOT_TEMP_FILE" "${ARCHIVE_PATHS[@]}" | glacier-cli archive upload "$VAULT" --name="$ARCHIVE_NAME" - ||
 	die 1 "Upload failed."
 echo "Upload finished."
 

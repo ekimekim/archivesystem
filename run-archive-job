@@ -9,6 +9,7 @@ ARCHIVE_PATHS=(
 	"$HOME/src"
 	"$HOME/bin"
 	"$HOME/documents/resume"
+	"$HOME/random"
 )
 
 START_TIME="`date +%s`"

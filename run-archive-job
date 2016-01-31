@@ -8,7 +8,7 @@ VAULT="archive-system"
 ARCHIVE_PATHS=(
 	"$HOME/src"
 	"$HOME/bin"
-	"$HOME/documents/resume"
+	"$HOME/documents"
 	"$HOME/random"
 )
 

@@ -28,6 +28,8 @@ die() {
 	exit "$code"
 }
 
+echo "Process $$ starting at $START_TIME"
+
 SNAPSHOT_MTIME="`stat -c '%Y' "$SNAPSHOT_FILE"`"
 MIN_TIME_SINCE_LAST_RUN="$((60*60*23))"
 if [ ! -n "$IGNORE_LAST_RUN_TIME" ] && [ $((START_TIME - SNAPSHOT_MTIME)) -lt "$MIN_TIME_SINCE_LAST_RUN" ]; then

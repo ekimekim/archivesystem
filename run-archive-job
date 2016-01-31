@@ -12,9 +12,9 @@ ARCHIVE_PATHS=(
 	"$HOME/random"
 )
 
-START_TIME="`date +%s`"
+START_TIME="$(date +%s)"
 
-[ -n "$HOSTNAME" ] || HOSTNAME="`hostname`"
+[ -n "$HOSTNAME" ] || HOSTNAME="$(hostname)"
 
 if ! which glacier-cli >/dev/null 2>&1; then
 	PATH="${PATH}:$HOME/bin"
@@ -30,9 +30,9 @@ die() {
 
 echo "Process $$ starting at $START_TIME"
 
-SNAPSHOT_MTIME="`stat -c '%Y' "$SNAPSHOT_FILE"`"
+SNAPSHOT_MTIME="$(stat -c '%Y' "$SNAPSHOT_FILE")"
 MIN_TIME_SINCE_LAST_RUN="$((60*60*23))"
-if [ ! -n "$IGNORE_LAST_RUN_TIME" ] && [ $((START_TIME - SNAPSHOT_MTIME)) -lt "$MIN_TIME_SINCE_LAST_RUN" ]; then
+if [ ! -n "$IGNORE_LAST_RUN_TIME" ] && [ "$((START_TIME - SNAPSHOT_MTIME))" -lt "$MIN_TIME_SINCE_LAST_RUN" ]; then
 	die 2 "Refusing to run archiver $((START_TIME - SNAPSHOT_MTIME)) < $MIN_TIME_SINCE_LAST_RUN seconds after last run.
 Run again with IGNORE_LAST_RUN_TIME=true to run anyway."
 fi
@@ -44,7 +44,7 @@ if [ ! -n "$NO_FIRSTRUN" ] && [ "$(date +%-d)" -eq "1" ] && [ "$((START_TIME - S
 	FIRSTRUN="true"
 fi
 
-echo "Running \"$0 $@\" @$START_TIME for host $HOSTNAME into vault $VAULT"
+echo "Running \"$0 $*\" @$START_TIME for host $HOSTNAME into vault $VAULT"
 echo "Using snapshot file: $SNAPSHOT_FILE"
 echo "Archiving paths:"
 for path in "${ARCHIVE_PATHS[@]}"; do

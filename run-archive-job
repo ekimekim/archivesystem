@@ -38,7 +38,7 @@ Run again with IGNORE_LAST_RUN_TIME=true to run anyway."
 fi
 
 # The first of every month, we do a non-incremental backup so we never need to restore too many files
-MIN_TIME_SINCE_LAST_FULL="$(60*60*24*7)" # for safety
+MIN_TIME_SINCE_LAST_FULL="$((60*60*24*7))" # for safety
 if [ ! -n "$NO_FIRSTRUN" ] && [ "$(date +%-d)" -eq "1" ] && [ "$((START_TIME - SNAPSHOT_MTIME))" -gt "$MIN_TIME_SINCE_LAST_FULL" ]; then
 	echo "First of month, doing non-incremental run"
 	FIRSTRUN="true"

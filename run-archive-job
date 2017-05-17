@@ -12,6 +12,11 @@ ARCHIVE_PATHS=(
 	"$HOME/random"
 )
 
+EXCLUDE_PATHS=(
+	"$HOME/src/linux"
+	"$HOME/src/weaveworks"
+)
+
 START_TIME="$(date +%s)"
 
 [ -n "$HOSTNAME" ] || HOSTNAME="$(hostname)"
@@ -28,18 +33,25 @@ die() {
 	exit "$code"
 }
 
+tarcmd() {
+	tar czg "$SNAPSHOT_TEMP_FILE" \
+		--ignore-failed-read --anchored \
+		--exclude-from=<(printf '%s\n' "${EXCLUDE_PATHS[@]}") \
+		"${ARCHIVE_PATHS[@]}"
+}
+
 echo "Process $$ starting at $START_TIME"
 
 SNAPSHOT_MTIME="$(stat -c '%Y' "$SNAPSHOT_FILE")"
 MIN_TIME_SINCE_LAST_RUN="$((60*60*23))"
-if [ ! -n "$IGNORE_LAST_RUN_TIME" ] && [ "$((START_TIME - SNAPSHOT_MTIME))" -lt "$MIN_TIME_SINCE_LAST_RUN" ]; then
+if [ ! -n "$IGNORE_LAST_RUN_TIME" ] && [ ! -n "$DRY_RUN" ] && [ "$((START_TIME - SNAPSHOT_MTIME))" -lt "$MIN_TIME_SINCE_LAST_RUN" ]; then
 	die 2 "Refusing to run archiver $((START_TIME - SNAPSHOT_MTIME)) < $MIN_TIME_SINCE_LAST_RUN seconds after last run.
 Run again with IGNORE_LAST_RUN_TIME=true to run anyway."
 fi
 
 # The first of every month, we do a non-incremental backup so we never need to restore too many files
 MIN_TIME_SINCE_LAST_FULL="$((60*60*24*7))" # for safety
-if [ ! -n "$NO_FIRSTRUN" ] && [ "$(date +%-d)" -eq "1" ] && [ "$((START_TIME - SNAPSHOT_MTIME))" -gt "$MIN_TIME_SINCE_LAST_FULL" ]; then
+if [ ! -n "$NO_FIRSTRUN" ] && [ ! -n "$DRY_RUN" ] && [ "$(date +%-d)" -eq "1" ] && [ "$((START_TIME - SNAPSHOT_MTIME))" -gt "$MIN_TIME_SINCE_LAST_FULL" ]; then
 	echo "First of month, doing non-incremental run"
 	FIRSTRUN="true"
 fi
@@ -48,6 +60,10 @@ echo "Running \"$0 $*\" @$START_TIME for host $HOSTNAME into vault $VAULT"
 echo "Using snapshot file: $SNAPSHOT_FILE"
 echo "Archiving paths:"
 for path in "${ARCHIVE_PATHS[@]}"; do
+	echo -e "\t$path"
+done
+echo "Excluding paths:"
+for path in "${EXCLUDE_PATHS[@]}"; do
 	echo -e "\t$path"
 done
 
@@ -71,11 +87,24 @@ fi
 NAME_EXTRA=
 [ -n "$FIRSTRUN" ] && NAME_EXTRA="-base"
 ARCHIVE_NAME="${HOSTNAME}-${START_TIME}${NAME_EXTRA}.tar.gz"
-echo "Performing upload of archive $ARCHIVE_NAME"
-tar czg "$SNAPSHOT_TEMP_FILE" "${ARCHIVE_PATHS[@]}" | glacier-cli archive upload "$VAULT" --name="$ARCHIVE_NAME" - ||
-	die 1 "Upload failed."
-echo "Upload finished."
+if [ -n "$DRY_RUN" ]; then
+	echo "Performing dry run of archive $ARCHIVE_NAME"
+	size=$(tarcmd | wc -c) || die 1 "Failed to create dry-run archive"
+	echo "Dry run finished. Produced $size byte ($((size/1024/1024))MiB) tar file."
+	rm "$SNAPSHOT_TEMP_FILE" || die 1 "Failed to clean up snapshot"
+else
+	echo "Performing upload of archive $ARCHIVE_NAME"
+	# I've had problems doing a direct pipe, I think because of the way glacier-cli is reading
+	# and interacting with the pipe buffer. Writing out to file seems more reliable.
+	TMP_PATH='/home/mike/Downloads/archive-system/' # /tmp is ramfs and this file may be too big
+	mkdir -p "$TMP_PATH"
+	tarcmd > "$TMP_PATH/$ARCHIVE_NAME" || die 1 "Tar creation failed."
+	echo "Created archive of size $(stat -c %s "$TMP_PATH/$ARCHIVE_NAME")"
+	glacier-cli archive upload "$VAULT" --name="$ARCHIVE_NAME" "$TMP_PATH/$ARCHIVE_NAME" || die 1 "Upload failed."
+	echo "Upload finished."
+	mv "$SNAPSHOT_TEMP_FILE" "$SNAPSHOT_FILE" || die 1 "Snapshot move failed"
+	rm "$TMP_PATH/$ARCHIVE_NAME" || echo "WARNING: Failed to delete tar file $TMP_PATH/$ARCHIVE_NAME"
+fi
 
-mv "$SNAPSHOT_TEMP_FILE" "$SNAPSHOT_FILE" || die "Snapshot move failed"
 
 echo "Archive run complete."

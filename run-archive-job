@@ -93,12 +93,18 @@ if [ -n "$DRY_RUN" ]; then
 	echo "Dry run finished. Produced $size byte ($((size/1024/1024))MiB) tar file."
 	rm "$SNAPSHOT_TEMP_FILE" || die 1 "Failed to clean up snapshot"
 else
-	echo "Performing upload of archive $ARCHIVE_NAME"
+	echo "Preparing archive $ARCHIVE_NAME"
 	# I've had problems doing a direct pipe, I think because of the way glacier-cli is reading
 	# and interacting with the pipe buffer. Writing out to file seems more reliable.
 	TMP_PATH='/home/mike/Downloads/archive-system/' # /tmp is ramfs and this file may be too big
 	mkdir -p "$TMP_PATH"
-	tarcmd > "$TMP_PATH/$ARCHIVE_NAME" || die 1 "Tar creation failed."
+	tarcmd > "$TMP_PATH/$ARCHIVE_NAME"
+	result=$?
+	if [ "$result" -eq 1 ]; then
+		echo "Warning: tar exited 1, some files may have issues"
+	elif [ "$result" -ne 0 ]; then
+		die 1 "Tar creation failed."
+	fi
 	echo "Created archive of size $(stat -c %s "$TMP_PATH/$ARCHIVE_NAME")"
 	glacier-cli archive upload "$VAULT" --name="$ARCHIVE_NAME" "$TMP_PATH/$ARCHIVE_NAME" || die 1 "Upload failed."
 	echo "Upload finished."

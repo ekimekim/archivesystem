@@ -14,7 +14,7 @@ ARCHIVE_PATHS=(
 
 EXCLUDE_PATHS=(
 	"$HOME/src/linux"
-	"$HOME/src/weaveworks"
+	"$HOME/src/postmates"
 )
 
 START_TIME="$(date +%s)"

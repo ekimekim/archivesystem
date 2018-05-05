@@ -34,7 +34,7 @@ die() {
 }
 
 tarcmd() {
-	tar czg "$SNAPSHOT_TEMP_FILE" \
+	tar cJg "$SNAPSHOT_TEMP_FILE" \
 		--ignore-failed-read --anchored \
 		--exclude-from=<(printf '%s\n' "${EXCLUDE_PATHS[@]}") \
 		"${ARCHIVE_PATHS[@]}"
@@ -86,7 +86,7 @@ fi
 
 NAME_EXTRA=
 [ -n "$FIRSTRUN" ] && NAME_EXTRA="-base"
-ARCHIVE_NAME="${HOSTNAME}-${START_TIME}${NAME_EXTRA}.tar.gz"
+ARCHIVE_NAME="${HOSTNAME}-${START_TIME}${NAME_EXTRA}.tar.xz"
 if [ -n "$DRY_RUN" ]; then
 	echo "Performing dry run of archive $ARCHIVE_NAME"
 	size=$(tarcmd | wc -c) || die 1 "Failed to create dry-run archive"

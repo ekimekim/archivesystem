@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SNAPSHOT_FILE="$HOME/.archive-system-tar-incremental-snapshot"
+SNAPSHOT_FILE="$HOME/Downloads/.archive-system-tar-incremental-snapshot"
 SNAPSHOT_TEMP_FILE="${SNAPSHOT_FILE}-new"
 LOCK_FILE="$HOME/.archive-system-lock"
 VAULT="archive-system"
@@ -15,6 +15,7 @@ ARCHIVE_PATHS=(
 EXCLUDE_PATHS=(
 	"$HOME/src/linux"
 	"$HOME/src/postmates"
+	"$HOME/random/big"
 )
 
 START_TIME="$(date +%s)"
